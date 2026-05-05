@@ -189,99 +189,100 @@ MENU PRINCIPALE
 0. Esci
 """)
 
-        choice = input("Scelta: ")
+        choice = int(input("Scelta: "))
 
-        if choice == "1":
-            name = input("Nome: ")
-            surname = input("Cognome: ")
-            student = Student(name, surname)
-            print(uni.registerStudent(student))
+        match choice:
+            case 1:
+                name = input("Nome: ")
+                surname = input("Cognome: ")
+                student = Student(name, surname)
+                print(uni.registerStudent(student))
 
-        elif choice == "2":
-            name = input("Nome corso: ")
-            teacher = input("Docente: ")
+            case 2:
+                name = input("Nome corso: ")
+                teacher = input("Docente: ")
 
-            try:
-                max_students = int(input("Max studenti: "))
-            except ValueError:
-                print("Numero non valido")
-                continue
+                try:
+                    max_students = int(input("Max studenti: "))
+                except ValueError:
+                    print("Numero non valido")
+                    continue
 
-            course = Course(name, teacher, max_students)
-            print(uni.createCourse(course))
+                course = Course(name, teacher, max_students)
+                print(uni.createCourse(course))
 
-        elif choice == "3":
-            sid = input("ID studente: ")
-            cname = input("Nome corso: ")
+            case 3:
+                sid = input("ID studente: ")
+                cname = input("Nome corso: ")
 
-            student = uni.findStudent(sid)
-            course = uni.findCourse(cname)
+                student = uni.findStudent(sid)
+                course = uni.findCourse(cname)
 
-            if student is None or course is None:
-                print("Errore: studente o corso non trovato")
-            else:
-                print(student.enroll(course))
-                uni.writeLog(f"[ENROLL] {student.studentId} -> {course.courseName}")
+                if student is None or course is None:
+                    print("Errore: studente o corso non trovato")
+                else:
+                    print(student.enroll(course))
+                    uni.writeLog(f"[ENROLL] {student.studentId} -> {course.courseName}")
 
-        elif choice == "4":
-            sid = input("ID studente: ")
-            cname = input("Corso: ")
+            case 4:
+                sid = input("ID studente: ")
+                cname = input("Corso: ")
 
-            try:
-                grade = float(input("Voto: "))
-            except ValueError:
-                print("Voto non valido")
-                continue
+                try:
+                    grade = float(input("Voto: "))
+                except ValueError:
+                    print("Voto non valido")
+                    continue
 
-            student = uni.findStudent(sid)
-            course = uni.findCourse(cname)
+                student = uni.findStudent(sid)
+                course = uni.findCourse(cname)
 
-            if student is None or course is None:
-                print("Errore")
-            else:
-                print(student.addGrade(course, grade))
-                uni.writeLog(f"[GRADE] {student.studentId} | {course.courseName} | {grade}")
+                if student is None or course is None:
+                    print("Errore")
+                else:
+                    print(student.addGrade(course, grade))
+                    uni.writeLog(f"[GRADE] {student.studentId} | {course.courseName} | {grade}")
 
-        elif choice == "5":
-            sid = input("ID studente: ")
-            student = uni.findStudent(sid)
+            case 5:
+                sid = input("ID studente: ")
+                student = uni.findStudent(sid)
 
-            if student is None:
-                print("Studente non trovato")
-            else:
-                print(student.studentInfo())
+                if student is None:
+                    print("Studente non trovato")
+                else:
+                    print(student.studentInfo())
 
-        elif choice == "6":
-            cname = input("Nome corso: ")
-            course = uni.findCourse(cname)
+            case 6:
+                cname = input("Nome corso: ")
+                course = uni.findCourse(cname)
 
-            if course is None:
-                print("Corso non trovato")
-            else:
-                print(course.courseInfo())
+                if course is None:
+                    print("Corso non trovato")
+                else:
+                    print(course.courseInfo())
 
-        elif choice == "7":
-            for s in uni.showTopStudents():
-                print(s)
+            case 7:
+                for s in uni.showTopStudents():
+                    print(s)
 
-        elif choice == "8":
-            print(uni.saveData())
+            case 8:
+                print(uni.saveData())
 
-        elif choice == "9":
-            print(uni.loadData())
+            case 9:
+                print(uni.loadData())
 
-        elif choice == "10":
-            try:
-                with open("logs.txt", "r") as file:
-                    print(file.read())
-            except FileNotFoundError:
-                print("Nessun log disponibile")
+            case 10:
+                try:
+                    with open("logs.txt", "r") as file:
+                        print(file.read())
+                except FileNotFoundError:
+                    print("Nessun log disponibile")
 
-        elif choice == "0":
-            break
+            case 0:
+                break
 
-        else:
-            print("Scelta non valida")
+            case _:
+                print("Scelta non valida")
 
 
 if __name__ == "__main__":

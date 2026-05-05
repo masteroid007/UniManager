@@ -278,107 +278,132 @@ MENU PRINCIPALE
 4. Aggiungi voto
 5. Mostra studente
 6. Mostra corso
-7. Classifica studenti
-8. Salva dati
-9. Carica dati
-10. Mostra log
+7. Mostra lista studenti
+8. Mostra lista corsi
+9. Classifica studenti
+10. Salva dati
+11. Carica dati
+12. Mostra log
 0. Esci
 """)
+        try:
+            choice = int(input("Scelta: "))
 
-        choice = int(input("Scelta: "))
+            match choice:
+                case 1:
+                    name = input("Nome: ")
+                    surname = input("Cognome: ")
+                    student = Student(name, surname)
+                    print(uni.registerStudent(student))
 
-        match choice:
-            case 1:
-                name = input("Nome: ")
-                surname = input("Cognome: ")
-                student = Student(name, surname)
-                print(uni.registerStudent(student))
+                case 2:
+                    name = input("Nome corso: ")
+                    teacher = input("Docente: ")
 
-            case 2:
-                name = input("Nome corso: ")
-                teacher = input("Docente: ")
+                    try:
+                        max_students = int(input("Max studenti: "))
+                    except ValueError:
+                        print("Numero non valido")
+                        continue
 
-                try:
-                    max_students = int(input("Max studenti: "))
-                except ValueError:
-                    print("Numero non valido")
-                    continue
+                    course = Course(name, teacher, max_students)
+                    print(uni.createCourse(course))
 
-                course = Course(name, teacher, max_students)
-                print(uni.createCourse(course))
+                case 3:
+                    sid = input("ID studente: ")
+                    cname = input("Nome corso: ")
 
-            case 3:
-                sid = input("ID studente: ")
-                cname = input("Nome corso: ")
+                    student = uni.findStudent(sid)
+                    course = uni.findCourse(cname)
 
-                student = uni.findStudent(sid)
-                course = uni.findCourse(cname)
+                    if student is None or course is None:
+                        print("Errore: studente o corso non trovato")
+                    else:
+                        print(student.enroll(course))
+                        uni.writeLog(f"[ENROLL] {student.studentId} -> {course.courseName}")
 
-                if student is None or course is None:
-                    print("Errore: studente o corso non trovato")
-                else:
-                    print(student.enroll(course))
-                    uni.writeLog(f"[ENROLL] {student.studentId} -> {course.courseName}")
+                case 4:
+                    sid = input("ID studente: ")
+                    cname = input("Corso: ")
 
-            case 4:
-                sid = input("ID studente: ")
-                cname = input("Corso: ")
+                    try:
+                        grade = float(input("Voto: "))
+                    except ValueError:
+                        print("Voto non valido")
+                        continue
 
-                try:
-                    grade = float(input("Voto: "))
-                except ValueError:
-                    print("Voto non valido")
-                    continue
+                    student = uni.findStudent(sid)
+                    course = uni.findCourse(cname)
 
-                student = uni.findStudent(sid)
-                course = uni.findCourse(cname)
+                    if student is None or course is None:
+                        print("Errore")
+                    else:
+                        print(student.addGrade(course, grade))
+                        uni.writeLog(f"[GRADE] {student.studentId} | {course.courseName} | {grade}")
 
-                if student is None or course is None:
-                    print("Errore")
-                else:
-                    print(student.addGrade(course, grade))
-                    uni.writeLog(f"[GRADE] {student.studentId} | {course.courseName} | {grade}")
+                case 5:
+                    scelta = input("Che tipo di ricerca? (nome/cognome/id): ").lower().strip()
 
-            case 5:
-                sid = input("ID studente: ")
-                student = uni.findStudent(sid)
+                    while scelta not in ["nome", "cognome", "id"]:
+                        print("Scelta non valida")
+                        scelta = input("Che tipo di ricerca? (nome/cognome/id): ").lower().strip()
 
-                if student is None:
-                    print("Studente non trovato")
-                else:
-                    print(student.studentInfo())
+                    info = input("Info studente da cercare: ")
 
-            case 6:
-                cname = input("Nome corso: ")
-                course = uni.findCourse(cname)
+                    result = uni.findStudent(info, scelta)
 
-                if course is None:
-                    print("Corso non trovato")
-                else:
-                    print(course.courseInfo())
+                    if not result:
+                        print("Studente non trovato")
+                    else:
+                        try:
+                            for s in result:
+                                print(s.studentInfo())
+                        except TypeError:
+                            print(result.studentInfo())
 
-            case 7:
-                for s in uni.showTopStudents():
-                    print(s)
+                case 6:
+                    cname = input("Nome corso: ")
+                    course = uni.findCourse(cname)
 
-            case 8:
-                print(uni.saveData())
+                    if course is None:
+                        print("Corso non trovato")
+                    else:
+                        print(course.courseInfo())
 
-            case 9:
-                print(uni.loadData())
+                case 7:
+                    print(uni.listStudents())
 
-            case 10:
-                try:
-                    with open("logs.txt", "r") as file:
-                        print(file.read())
-                except FileNotFoundError:
-                    print("Nessun log disponibile")
+                case 8:
+                    print(uni.listCourses())
 
-            case 0:
-                break
+                case 9:
+                    for s in uni.showTopStudents():
+                        print(s)
 
-            case _:
-                print("Scelta non valida")
+                case 10:
+                    print(uni.saveData())
+
+                case 11:
+                    print(uni.loadData())
+
+                case 12:
+                    try:
+                        with open("logs.txt", "r") as file:
+                            print(file.read())
+                    except FileNotFoundError:
+                        print("Nessun log disponibile")
+
+                case 0:
+                    break
+
+                case _:
+                    print("Scelta non valida")
+        
+        except ValueError:
+            print("Scelta non valida")
+        
+        except Exception as e:
+            print("Errore:", e)
 
 
 if __name__ == "__main__":

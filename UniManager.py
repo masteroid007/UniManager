@@ -23,7 +23,9 @@ Voti: {self.grades if self.grades else "Nessun voto registrato"}
         if course.courseName not in self.courses:
             self.courses.append(course.courseName)
 
-        course.addStudent(self.studentId)
+        if self.studentId not in course.students:
+            course.students.append(self.studentId)
+
         return f"Studente {self.name} iscritto a {course.courseName}"
 
     def addGrade(self, course, grade):
@@ -104,11 +106,24 @@ class University:
         self.writeLog(f"[INFO] Corso creato {course.courseName}")
         return "Corso creato"
 
-    def findStudent(self, studentId):
+    def findStudent(self, info, typeFind="id"):
+        results = []
+
         for student in self.students:
-            if student.studentId == studentId:
-                return student
-        return None
+            if typeFind == "id":
+                if student.studentId == info:
+                    return student
+
+            elif typeFind == "nome":
+                if student.name.lower() == info.lower():
+                    results.append(student)
+
+            elif typeFind == "cognome":
+                if student.surname.lower() == info.lower():
+                    results.append(student)
+
+        return None if typeFind == "id" else results
+                
 
     def findCourse(self, courseName):
         for course in self.courses:
@@ -138,6 +153,17 @@ class University:
         with open("courses.txt", "w") as file:
             for c in self.courses:
                 file.write(f"{c.courseName}|{c.teacher}|{c.maxStudents}\n")
+        
+        with open("enrollments.txt", "w") as file:
+            for s in self.students:
+                for course in s.courses:
+                    file.write(f"{s.studentId}|{course}\n")
+        
+        with open("grades.txt", "w") as file:
+            for s in self.students:
+                for course, grades in s.grades.items():
+                    for g in grades:
+                        file.write(f"{s.studentId}|{course}|{g}\n")
 
         self.writeLog("[SYSTEM] Dati salvati")
         return "Dati salvati"
@@ -149,23 +175,93 @@ class University:
         try:
             with open("students.txt", "r") as file:
                 for line in file:
-                    if line.strip():
-                        sid, name, surname = line.strip().split("|")
-                        self.students.append(Student(name, surname, sid))
+                    parts = line.strip().split("|")
+                    if len(parts) != 3:
+                        continue
+
+                    sid, name, surname = parts
+                    self.students.append(Student(name, surname, sid))
         except FileNotFoundError:
             pass
 
         try:
             with open("courses.txt", "r") as file:
                 for line in file:
-                    if line.strip():
-                        cname, teacher, maxs = line.strip().split("|")
-                        self.courses.append(Course(cname, teacher, int(maxs)))
+                    parts = line.strip().split("|")
+                    if len(parts) != 3:
+                        continue
+
+                    cname, teacher, maxs = parts
+                    self.courses.append(Course(cname, teacher, int(maxs)))
+        except FileNotFoundError:
+            pass
+            
+        try:
+            with open("enrollments.txt", "r") as file:
+                for line in file:
+                    sid, courseName = line.strip().split("|")
+
+                    student = self.findStudent(sid, "id")
+                    course = self.findCourse(courseName)
+
+                    if student and course:
+                        if courseName not in student.courses:
+                            student.courses.append(courseName)
+
+                        if sid not in course.students:
+                            course.students.append(sid)
         except FileNotFoundError:
             pass
 
+        try:
+            with open("grades.txt", "r") as file:
+                for line in file:
+                    parts = line.strip().split("|")
+                    if len(parts) != 3:
+                        continue
+
+                    sid, courseName, grade = parts
+
+                    student = self.findStudent(sid, "id")
+
+                    if student:
+                        if courseName not in student.grades:
+                            student.grades[courseName] = []
+
+                        student.grades[courseName].append(float(grade))
+        except:
+            pass
+
+        for s in self.students:
+            for courseName in s.courses:
+                course = self.findCourse(courseName)
+
+                if course and s.studentId not in course.students:
+                    course.students.append(s.studentId)
+
         self.writeLog("[SYSTEM] Dati caricati")
         return "Dati caricati"
+    
+    def listCourses(self):
+        if len(self.courses) == 0:
+            return "Nessun corso registrato"
+
+        result = ""
+        for c in self.courses:
+            result += c.courseName + "\n"
+
+        return result.strip()
+
+
+    def listStudents(self):
+        if len(self.students) == 0:
+            return "Nessuno studente registrato"
+
+        result = ""
+        for s in self.students:
+            result += f"{s.name} {s.surname} - Id Univoco: {s.studentId}\n"
+
+        return result.strip()
 
 
 def main():

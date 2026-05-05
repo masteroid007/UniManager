@@ -91,8 +91,8 @@ class University:
                 return "Studente già registrato"
 
         self.students.append(student)
-        self.writeLog(f"[INFO] Studente registrato {student.name} {student.surname}")
-        return "Studente registrato"
+        self.writeLog(f"[INFO] Studente registrato {student.name} {student.surname} con ID studente {student.studentId}")
+        return f"Studente registrato con ID {student.studentId}"
 
     def createCourse(self, course):
         for c in self.courses:

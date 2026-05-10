@@ -1,4 +1,6 @@
 import uuid
+import pandas as pd
+import datetime
 
 class Student:
     def __init__(self, name, surname, studentId=None):
@@ -146,91 +148,124 @@ class University:
         ]
 
     def saveData(self):
-        with open("students.txt", "w") as file:
-            for s in self.students:
-                file.write(f"{s.studentId}|{s.name}|{s.surname}\n")
+        students = []
+        courses = []
+        enrollments = []
+        grades = []
 
-        with open("courses.txt", "w") as file:
-            for c in self.courses:
-                file.write(f"{c.courseName}|{c.teacher}|{c.maxStudents}\n")
         
-        with open("enrollments.txt", "w") as file:
-            for s in self.students:
-                for course in s.courses:
-                    file.write(f"{s.studentId}|{course}\n")
-        
-        with open("grades.txt", "w") as file:
-            for s in self.students:
-                for course, grades in s.grades.items():
-                    for g in grades:
-                        file.write(f"{s.studentId}|{course}|{g}\n")
+        for s in self.students:
+            students.append({
+                "StudentID": s.studentId,
+                "Name": s.name,
+                "Surname": s.surname
+            })
 
-        self.writeLog("[SYSTEM] Dati salvati")
+        pd.DataFrame(students).to_csv("students.csv", index=False)
+
+
+        for c in self.courses:
+            courses.append({
+                "CourseName": c.courseName,
+                "Teacher": c.teacher,
+                "MaxStudents": c.maxStudents
+            })
+
+        pd.DataFrame(courses).to_csv("courses.csv", index=False)
+
+        
+        for s in self.students:
+            for course in s.courses:
+                enrollments.append({
+                    "StudentID": s.studentId,
+                    "Course": course
+                })
+
+        pd.DataFrame(enrollments).to_csv("enrollments.csv", index=False)
+
+        
+        for s in self.students:
+            for course, grade_list in s.grades.items():
+                for g in grade_list:
+                    grades.append({
+                        "StudentID": s.studentId,
+                        "Course": course,
+                        "Grade": g
+                    })
+
+        pd.DataFrame(grades).to_csv("grades.csv", index=False)
+
+        self.writeLog(f"[SYSTEM]  Dati salvati")
         return "Dati salvati"
 
     def loadData(self):
         self.students = []
         self.courses = []
 
+        
         try:
-            with open("students.txt", "r") as file:
-                for line in file:
-                    parts = line.strip().split("|")
-                    if len(parts) != 3:
-                        continue
+            df = pd.read_csv("students.csv")
 
-                    sid, name, surname = parts
-                    self.students.append(Student(name, surname, sid))
+            for _, row in df.iterrows():
+                self.students.append(
+                    Student(row["Name"], row["Surname"], row["StudentID"])
+                )
+
         except FileNotFoundError:
             pass
 
+        
         try:
-            with open("courses.txt", "r") as file:
-                for line in file:
-                    parts = line.strip().split("|")
-                    if len(parts) != 3:
-                        continue
+            df = pd.read_csv("courses.csv")
 
-                    cname, teacher, maxs = parts
-                    self.courses.append(Course(cname, teacher, int(maxs)))
-        except FileNotFoundError:
-            pass
-            
-        try:
-            with open("enrollments.txt", "r") as file:
-                for line in file:
-                    sid, courseName = line.strip().split("|")
+            for _, row in df.iterrows():
+                self.courses.append(
+                    Course(
+                        row["CourseName"],
+                        row["Teacher"],
+                        int(row["MaxStudents"])
+                    )
+                )
 
-                    student = self.findStudent(sid, "id")
-                    course = self.findCourse(courseName)
-
-                    if student and course:
-                        if courseName not in student.courses:
-                            student.courses.append(courseName)
-
-                        if sid not in course.students:
-                            course.students.append(sid)
         except FileNotFoundError:
             pass
 
+        
         try:
-            with open("grades.txt", "r") as file:
-                for line in file:
-                    parts = line.strip().split("|")
-                    if len(parts) != 3:
-                        continue
+            df = pd.read_csv("enrollments.csv")
 
-                    sid, courseName, grade = parts
+            for _, row in df.iterrows():
+                student = self.findStudent(row["StudentID"])
+                course = self.findCourse(row["Course"])
 
-                    student = self.findStudent(sid, "id")
+                if student and course:
 
-                    if student:
-                        if courseName not in student.grades:
-                            student.grades[courseName] = []
+                    if row["Course"] not in student.courses:
+                        student.courses.append(row["Course"])
 
-                        student.grades[courseName].append(float(grade))
-        except:
+                    if student.studentId not in course.students:
+                        course.students.append(student.studentId)
+
+        except FileNotFoundError:
             pass
+
+        
+        try:
+            df = pd.read_csv("grades.csv")
+
+            for _, row in df.iterrows():
+                student = self.findStudent(row["StudentID"])
+
+                if student:
+
+                    if row["Course"] not in student.grades:
+                        student.grades[row["Course"]] = []
+
+                    student.grades[row["Course"]].append(float(row["Grade"]))
+
+        except FileNotFoundError:
+            pass
+
 
         for s in self.students:
             for courseName in s.courses:

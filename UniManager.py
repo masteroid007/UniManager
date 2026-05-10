@@ -85,27 +85,40 @@ class University:
         self.courses = []
 
     def writeLog(self, message):
-        with open("logs.txt", "a") as file:
-            file.write(message + "\n")
+        timestamp = datetime.datetime.now().strftime("[%Y-%m-%d %H:%M:%S] ")
+        with open("logs.log", "a") as file:
+            file.write(timestamp + message + "\n")
+
+    def clearLogs(self):
+        risposta = input("Sicuro di voler cancellare i logs del sistema? ").lower()
+        while risposta not in ["si", "no"]:
+            print("Risposta non valida")
+            risposta = input("Sicuro di voler cancellare i logs del sistema? ").lower()
+        if risposta == "si":
+            with open("logs.log", "w") as f:
+                f.write("")
+            return "Logs cancellati con successo"
+        else:
+            return "Operazione Annullata"
 
     def registerStudent(self, student):
         for s in self.students:
             if s.studentId == student.studentId:
-                self.writeLog("[ERROR] Studente già registrato")
+                self.writeLog(f"[ERROR]  Studente già registrato")
                 return "Studente già registrato"
 
         self.students.append(student)
-        self.writeLog(f"[INFO] Studente registrato {student.name} {student.surname} con ID studente {student.studentId}")
+        self.writeLog(f"[INFO]  Studente registrato {student.name} {student.surname} con ID studente {student.studentId}")
         return f"Studente registrato con ID {student.studentId}"
 
     def createCourse(self, course):
         for c in self.courses:
             if c.courseName == course.courseName:
-                self.writeLog("[ERROR] Corso già esistente")
+                self.writeLog(f"[ERROR]  Corso già esistente")
                 return "Corso già esistente"
 
         self.courses.append(course)
-        self.writeLog(f"[INFO] Corso creato {course.courseName}")
+        self.writeLog(f"[INFO]  Corso creato {course.courseName}")
         return "Corso creato"
 
     def findStudent(self, info, typeFind="id"):
@@ -274,7 +287,7 @@ class University:
                 if course and s.studentId not in course.students:
                     course.students.append(s.studentId)
 
-        self.writeLog("[SYSTEM] Dati caricati")
+        self.writeLog(f"[SYSTEM]  Dati caricati")
         return "Dati caricati"
     
     def listCourses(self):
@@ -319,6 +332,7 @@ MENU PRINCIPALE
 10. Salva dati
 11. Carica dati
 12. Mostra log
+13. Cancella Logs
 0. Esci
 """)
         try:
@@ -355,7 +369,7 @@ MENU PRINCIPALE
                         print("Errore: studente o corso non trovato")
                     else:
                         print(student.enroll(course))
-                        uni.writeLog(f"[ENROLL] {student.studentId} -> {course.courseName}")
+                        uni.writeLog(f"[INFO]  {student.studentId} -> {course.courseName}")
 
                 case 4:
                     sid = input("ID studente: ")
@@ -374,7 +388,7 @@ MENU PRINCIPALE
                         print("Errore")
                     else:
                         print(student.addGrade(course, grade))
-                        uni.writeLog(f"[GRADE] {student.studentId} | {course.courseName} | {grade}")
+                        uni.writeLog(f"[INFO]  {student.studentId} | {course.courseName} | {grade}")
 
                 case 5:
                     scelta = input("Che tipo di ricerca? (nome/cognome/id): ").lower().strip()
@@ -423,10 +437,13 @@ MENU PRINCIPALE
 
                 case 12:
                     try:
-                        with open("logs.txt", "r") as file:
+                        with open("logs.log", "r") as file:
                             print(file.read())
                     except FileNotFoundError:
                         print("Nessun log disponibile")
+                
+                case 13:
+                    print(uni.clearLogs())
 
                 case 0:
                     break
